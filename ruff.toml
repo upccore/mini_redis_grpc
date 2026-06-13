@@ -1,0 +1,1 @@
+exclude = ["kvstore_pb2.py", "kvstore_pb2_grpc.py"]
