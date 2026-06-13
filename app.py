@@ -9,7 +9,7 @@ from servicer import KeyValueStoreServicer
 
 
 def serve():
-    port = int(os.environ.get("PORT", "8000"))
+    port = int(os.environ.get("PORT", "50051"))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     kvstore_pb2_grpc.add_KeyValueStoreServicer_to_server(
         KeyValueStoreServicer(), server
