@@ -1,30 +1,45 @@
-import grpc
+from grpclib import GRPCError, Status
+from grpclib.server import Stream
 
 import kvstore_pb2
-import kvstore_pb2_grpc
+from kvstore_grpc import KeyValueStoreBase
 from store import KVStore
 
 
-class KeyValueStoreServicer(kvstore_pb2_grpc.KeyValueStoreServicer):
+class KeyValueStoreService(KeyValueStoreBase):
     def __init__(self):
         self._store = KVStore()
 
-    def Put(self, request, context):
+    async def Put(
+        self, stream: Stream[kvstore_pb2.PutRequest, kvstore_pb2.PutResponse]
+    ) -> None:
+        request = await stream.recv_message()
         self._store.put(request.key, request.value, request.ttl_seconds)
-        return kvstore_pb2.PutResponse()
+        await stream.send_message(kvstore_pb2.PutResponse())
 
-    def Get(self, request, context):
+    async def Get(
+        self, stream: Stream[kvstore_pb2.GetRequest, kvstore_pb2.GetResponse]
+    ) -> None:
+        request = await stream.recv_message()
         value = self._store.get(request.key)
         if value is None:
-            context.abort(grpc.StatusCode.NOT_FOUND, f"key '{request.key}' not found")
-        return kvstore_pb2.GetResponse(value=value)
+            raise GRPCError(Status.NOT_FOUND, f"key '{request.key}' not found")
+        await stream.send_message(kvstore_pb2.GetResponse(value=value))
 
-    def Delete(self, request, context):
+    async def Delete(
+        self, stream: Stream[kvstore_pb2.DeleteRequest, kvstore_pb2.DeleteResponse]
+    ) -> None:
+        request = await stream.recv_message()
         self._store.delete(request.key)
-        return kvstore_pb2.DeleteResponse()
+        await stream.send_message(kvstore_pb2.DeleteResponse())
 
-    def List(self, request, context):
+    async def List(
+        self, stream: Stream[kvstore_pb2.ListRequest, kvstore_pb2.ListResponse]
+    ) -> None:
+        request = await stream.recv_message()
         items = self._store.list_prefix(request.prefix)
-        return kvstore_pb2.ListResponse(
-            items=[kvstore_pb2.KeyValue(key=k, value=v) for k, v in items]
+        await stream.send_message(
+            kvstore_pb2.ListResponse(
+                items=[kvstore_pb2.KeyValue(key=k, value=v) for k, v in items]
+            )
         )
