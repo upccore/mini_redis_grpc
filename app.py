@@ -11,7 +11,7 @@ def serve():
     kvstore_pb2_grpc.add_KeyValueStoreServicer_to_server(
         KeyValueStoreServicer(), server
     )
-    server.add_insecure_port("[::]:8000")
+    server.add_insecure_port("0.0.0.0:8000")
     server.start()
     server.wait_for_termination()
 
