@@ -1,3 +1,4 @@
+import os
 from concurrent import futures
 
 import grpc
@@ -8,6 +9,7 @@ from servicer import KeyValueStoreServicer
 
 
 def serve():
+    port = int(os.environ.get("PORT", "8000"))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     kvstore_pb2_grpc.add_KeyValueStoreServicer_to_server(
         KeyValueStoreServicer(), server
@@ -17,7 +19,7 @@ def serve():
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
     health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
 
-    server.add_insecure_port("0.0.0.0:8000")
+    server.add_insecure_port(f"0.0.0.0:{port}")
     server.start()
     server.wait_for_termination()
 
