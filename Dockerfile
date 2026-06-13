@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=appuser:appuser app.py servicer.py store.py kvstore_pb2.py kvstore_pb2_grpc.py ./
 
+EXPOSE 8000
+
 USER appuser
 
 CMD ["python", "app.py"]
